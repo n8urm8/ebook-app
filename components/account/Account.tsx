@@ -3,12 +3,24 @@ import { StyleSheet, View, Alert } from 'react-native'
 import { Button, Input } from '@rneui/themed'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/utils/supabase'
+import Avatar from './Avatar'
+import Animated, { useAnimatedKeyboard, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 
 export default function Account({ session }: { session: Session }) {
   const [loading, setLoading] = useState(true)
   const [username, setUsername] = useState('')
   const [website, setWebsite] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [hasChanges, setHasChanges] = useState(false)
+  const keyboard = useAnimatedKeyboard();
+
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [{ translateY: withSpring(-keyboard.height.value, {
+        damping: 20,
+        stiffness: 100,
+        mass: 0.5
+      }) }],
+  }));
 
   useEffect(() => {
     if (session) getProfile()
@@ -78,29 +90,41 @@ export default function Account({ session }: { session: Session }) {
   }
 
   return (
-    <View style={styles.container}>
+    
+    <Animated.View style={[styles.container, animatedStyles]}>
+        <View style={styles.avatarWrapper}>
+            <Avatar
+                size={200}
+                url={avatarUrl}
+                onUpload={(url: string) => {
+                setAvatarUrl(url)
+                updateProfile({ username, website, avatar_url: url })
+                }}
+            />
+        </View>
+
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Input label="Email" value={session?.user?.email} disabled />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Username" value={username || ''} onChangeText={(text) => setUsername(text)} />
+        <Input label="Username" value={username || ''} onChangeText={(text) => {setHasChanges(true); setUsername(text)}} />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Website" value={website || ''} onChangeText={(text) => setWebsite(text)} />
+        <Input label="Website" value={website || ''} onChangeText={(text) =>  {setHasChanges(true); setWebsite(text)}} />
       </View>
 
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button
           title={loading ? 'Loading ...' : 'Update'}
           onPress={() => updateProfile({ username, website, avatar_url: avatarUrl })}
-          disabled={loading}
+          disabled={loading || !hasChanges}
         />
       </View>
 
       <View style={styles.verticallySpaced}>
         <Button title="Sign Out" onPress={() => supabase.auth.signOut()} />
       </View>
-    </View>
+    </Animated.View>
   )
 }
 
@@ -116,5 +140,10 @@ const styles = StyleSheet.create({
   },
   mt20: {
     marginTop: 20,
+  },
+  avatarWrapper: {
+    alignItems: 'center', 
+    width: '100%', 
+    paddingTop: 12,      
   },
 })

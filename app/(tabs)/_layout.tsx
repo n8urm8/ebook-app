@@ -7,6 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/lib/constants/Colors';
 import { useColorScheme } from '@/lib/hooks/useColorScheme';
+import { Icon } from '@rneui/themed';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -44,7 +45,8 @@ export default function TabLayout() {
         name="account"
         options={{
           title: 'Account',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          // tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Icon size={28} name="person" color={color} />,
         }}
       />
     </Tabs>
